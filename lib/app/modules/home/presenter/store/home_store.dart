@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 class HomeStore {
+  final ValueNotifier<String> successOrErrorPrint = ValueNotifier<String>('');
+
+  ContextMenu? contextMenu;
   PrintJobController? printJobController;
   InAppWebViewController? webViewController;
   InAppWebViewSettings settings = InAppWebViewSettings(
@@ -60,15 +63,53 @@ class HomeStore {
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       printJobController?.onComplete = (completed, error) async {
         if (completed) {
-          print("Print Job Completed");
+          successOrErrorPrint.value = 'S';
         } else {
-          print("Print Job Failed $error");
+          successOrErrorPrint.value = 'E';
         }
+        Future.delayed(const Duration(seconds: 2), () {
+          successOrErrorPrint.value = '';
+        });
         printJobController?.dispose();
       };
     }
 
-    final jobInfo = await printJobController?.getInfo();
-    print(jobInfo);
+    // final jobInfo = await printJobController?.getInfo();
+    // print(jobInfo);
+  }
+
+  void setContextMenu(BuildContext context) {
+    contextMenu = ContextMenu(
+        menuItems: [
+          ContextMenuItem(
+              id: 1,
+              title: "Special",
+              action: () async {
+                const snackBar = SnackBar(
+                  content: Text("Special clicked!"),
+                  duration: Duration(seconds: 1),
+                );
+                ScaffoldMessenger.of(context).showSnackBar(snackBar);
+              })
+        ],
+        onCreateContextMenu: (hitTestResult) async {
+          String selectedText =
+              await webViewController?.getSelectedText() ?? "";
+          final snackBar = SnackBar(
+            content: Text(
+                "Selected text: '$selectedText', of type: ${hitTestResult.type.toString()}"),
+            duration: const Duration(seconds: 1),
+          );
+          // ignore: use_build_context_synchronously
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        },
+        onContextMenuActionItemClicked: (menuItem) {
+          final snackBar = SnackBar(
+            content: Text(
+                "Menu item with ID ${menuItem.id} and title '${menuItem.title}' clicked!"),
+            duration: const Duration(seconds: 1),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        });
   }
 }

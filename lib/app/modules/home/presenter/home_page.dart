@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:innap_webview_study/app/modules/home/presenter/store/home_store.dart';
+import 'package:innap_webview_study/app/utils/snack/snack.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,6 +18,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     store.setPullToRefreshController();
+    store.setContextMenu(context);
     super.initState();
   }
 
@@ -57,6 +59,7 @@ class _HomePageState extends State<HomePage> {
               key: webViewKey,
               initialUrlRequest:
                   URLRequest(url: WebUri('https://github.com/flutter/')),
+              contextMenu: store.contextMenu,
               initialSettings: store.settings,
               pullToRefreshController: store.pullToRefreshController,
               onWebViewCreated: (controller) {
@@ -72,8 +75,10 @@ class _HomePageState extends State<HomePage> {
                   store.canGoBack = false;
                 }
               },
-              onLoadStop: (controller, url) {
+              onLoadStop: (controller, url) async {
                 store.pullToRefreshController?.endRefreshing();
+                await controller.injectJavascriptFileFromAsset(
+                    assetFilePath: "assets/js/main.js");
               },
               onReceivedError: (controller, request, error) {
                 store.pullToRefreshController?.endRefreshing();
@@ -99,7 +104,23 @@ class _HomePageState extends State<HomePage> {
                       child: CircularProgressIndicator(),
                     ),
                   )
-                : Container()
+                : Container(),
+            ValueListenableBuilder(
+                valueListenable: store.successOrErrorPrint,
+                builder: ((context, successOrErrorPrint, _) {
+                  if (successOrErrorPrint != '') {
+                    if (successOrErrorPrint != 'S') {
+                      showSnackBar(
+                          context: context, mesage: 'Sucesso ao imprimir');
+                    } else {
+                      showSnackBar(
+                          context: context,
+                          mesage: 'Erro ao imprimir',
+                          isError: true);
+                    }
+                  }
+                  return Container();
+                }))
           ],
         )),
       ),
