@@ -131,14 +131,21 @@ class _HomePageState extends State<HomePage> {
               label: 'save',
               icon: IconButton(
                   onPressed: () {
-                    cookiesStore.setCookie(value: 'value2', name: 'name');
+                    cookiesStore.setCookie(value: 'value23', name: 'name4');
                   },
                   icon: const Icon(Icons.save))),
           BottomNavigationBarItem(
               label: 'get',
               icon: IconButton(
                   onPressed: () {
-                    cookiesStore.getCookie(name: 'name', context: context);
+                    cookiesStore.getCookie(name: 'name4', context: context);
+                  },
+                  icon: const Icon(Icons.remove_red_eye_outlined))),
+          BottomNavigationBarItem(
+              label: 'getAll',
+              icon: IconButton(
+                  onPressed: () {
+                    cookiesStore.getAllCookies(context: context);
                   },
                   icon: const Icon(Icons.remove_red_eye_outlined)))
         ]),
