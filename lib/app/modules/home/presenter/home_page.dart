@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:innap_webview_study/app/modules/home/presenter/store/cookies_store.dart';
+import 'package:innap_webview_study/app/modules/home/presenter/store/find_interaction_store.dart';
 import 'package:innap_webview_study/app/modules/home/presenter/store/home_store.dart';
 
 class HomePage extends StatefulWidget {
@@ -12,13 +13,16 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final GlobalKey webViewKey = GlobalKey();
+  final searchController = TextEditingController();
 
   final HomeStore store = HomeStore();
   final CookiesStore cookiesStore = CookiesStore();
+  final FindInteractionStore findInteractionStore = FindInteractionStore();
 
   @override
   void initState() {
     store.setPullToRefreshController();
+    findInteractionStore.setFindInteraction(context: context);
     store.setContextMenu(context);
     super.initState();
   }
@@ -31,6 +35,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    var isFindInteractionEnabled =
+        store.settings.isFindInteractionEnabled ?? false;
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) {
@@ -50,7 +56,19 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () {
                   store.printDocument(context: context);
                 },
-                icon: const Icon(Icons.print))
+                icon: const Icon(Icons.print)),
+            ValueListenableBuilder(
+                valueListenable: findInteractionStore.search,
+                builder: ((context, search, _) {
+                  return IconButton(
+                      onPressed: () {
+                        findInteractionStore.setSearch(
+                            value: !findInteractionStore.search.value);
+                        searchController.text = '';
+                      },
+                      icon:
+                          Icon(!search ? Icons.search : Icons.cancel_outlined));
+                }))
           ],
         ),
         body: SafeArea(
@@ -58,6 +76,8 @@ class _HomePageState extends State<HomePage> {
             children: [
               InAppWebView(
                 key: webViewKey,
+                findInteractionController:
+                    findInteractionStore.findInteractionController,
                 initialUrlRequest:
                     URLRequest(url: WebUri('https://github.com/flutter/')),
                 contextMenu: store.contextMenu,
@@ -106,6 +126,63 @@ class _HomePageState extends State<HomePage> {
                       ),
                     )
                   : Container(),
+              AnimatedBuilder(
+                  animation: Listenable.merge([
+                    findInteractionStore.textFound,
+                    findInteractionStore.search
+                  ]),
+                  builder: ((context, child) {
+                    if (!isFindInteractionEnabled &&
+                        findInteractionStore.search.value) {
+                      return TextField(
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.white,
+                          prefixIcon: const Icon(Icons.search),
+                          suffixText: findInteractionStore.textFound.value,
+                          suffixIcon: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.arrow_upward),
+                                onPressed: () {
+                                  findInteractionStore
+                                      .findInteractionController!
+                                      .findNext(forward: false);
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.arrow_downward),
+                                onPressed: () {
+                                  findInteractionStore
+                                      .findInteractionController!
+                                      .findNext();
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        controller: searchController,
+                        keyboardType: TextInputType.text,
+                        onSubmitted: (value) {
+                          if (value == '') {
+                            findInteractionStore.findInteractionController!
+                                .clearMatches();
+                            findInteractionStore.setTextFound(text: '');
+                          } else {
+                            findInteractionStore.findInteractionController!
+                                .findAll(find: value);
+                          }
+                        },
+                      );
+                    } else {
+                      return Container();
+                    }
+                  })),
             ],
           ),
         ),
