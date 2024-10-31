@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:innap_webview_study/app/modules/home/presenter/store/cookies_store.dart';
 import 'package:innap_webview_study/app/modules/home/presenter/store/home_store.dart';
-import 'package:innap_webview_study/app/utils/snack/snack.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -49,7 +48,7 @@ class _HomePageState extends State<HomePage> {
           actions: [
             IconButton(
                 onPressed: () {
-                  store.printDocument();
+                  store.printDocument(context: context);
                 },
                 icon: const Icon(Icons.print))
           ],
@@ -107,22 +106,6 @@ class _HomePageState extends State<HomePage> {
                       ),
                     )
                   : Container(),
-              ValueListenableBuilder(
-                  valueListenable: store.successOrErrorPrint,
-                  builder: ((context, successOrErrorPrint, _) {
-                    if (successOrErrorPrint != '') {
-                      if (successOrErrorPrint != 'S') {
-                        showSnackBar(
-                            context: context, mesage: 'Sucesso ao imprimir');
-                      } else {
-                        showSnackBar(
-                            context: context,
-                            mesage: 'Erro ao imprimir',
-                            isError: true);
-                      }
-                    }
-                    return Container();
-                  }))
             ],
           ),
         ),

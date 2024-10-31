@@ -1,9 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:innap_webview_study/app/utils/snack/snack.dart';
 
 class HomeStore {
-  final ValueNotifier<String> successOrErrorPrint = ValueNotifier<String>('');
+  // final ValueNotifier<String> successOrErrorPrint = ValueNotifier<String>('');
 
   ContextMenu? contextMenu;
   PrintJobController? printJobController;
@@ -44,7 +45,7 @@ class HomeStore {
     }
   }
 
-  void printDocument() async {
+  void printDocument({required BuildContext context}) async {
     printJobController?.dispose();
 
     final jobSettings = PrintJobSettings(
@@ -63,13 +64,10 @@ class HomeStore {
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       printJobController?.onComplete = (completed, error) async {
         if (completed) {
-          successOrErrorPrint.value = 'S';
+          showSnackBar(context: context, mesage: 'Sucesso ao imprimir');
         } else {
-          successOrErrorPrint.value = 'E';
+          showSnackBar(context: context, mesage: 'Sucesso ao imprimir');
         }
-        Future.delayed(const Duration(seconds: 2), () {
-          successOrErrorPrint.value = '';
-        });
         printJobController?.dispose();
       };
     }
